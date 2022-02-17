@@ -1,0 +1,5 @@
+sync-ldap-subtrees (0.1.0-1) unstable; urgency=medium
+
+  * initial release
+
+ -- Matthias Hörmann <mhoermann@gmail.com>  Thu, 17 Feb 2022 13:57:52 +0000

@@ -587,6 +587,8 @@ dependencies = [
 [[package]]
 name = "ldap-types"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68aa830635ce4acd13bcd03137ab1001a1063b6eb139b2cb2b0582064ed71cd8"
 dependencies = [
  "chumsky",
  "enum-as-inner",
@@ -600,6 +602,8 @@ dependencies = [
 [[package]]
 name = "ldap-utils"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d1547126e60e28a99175b9242f34b2ce39191e25469abeec49159c1d0992eb33"
 dependencies = [
  "ariadne",
  "chumsky",

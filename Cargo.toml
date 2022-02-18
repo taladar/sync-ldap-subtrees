@@ -18,8 +18,31 @@ debug = true
 
 [dependencies]
 
+[dependencies.ldap-types]
+path="../ldap-types"
+
+[dependencies.ldap-utils]
+path="../ldap-utils"
+
+[dependencies.ldap3]
+version = "0.9"
+features = [ "tls" ]
+
+[dependencies.lazy_static]
+version = "1.4.0"
+
 [dependencies.simple-error]
 version = "~0.2"
+
+[dependencies.serde]
+version = "1.0.114"
+features = [ "derive" ]
+
+[dependencies.chumsky]
+version = "0.7.0"
+
+[dependencies.diff-struct]
+version = "0.4.0"
 
 [dependencies.clap]
 version = "~3.1"
@@ -38,6 +61,12 @@ version = "~0.1"
 [dependencies.tracing-subscriber]
 version = "~0.3"
 features = [ "env-filter", "tracing-log" ]
+
+[dependencies.oid]
+version = "0.2.1"
+
+[dependencies.enum-as-inner]
+version = "0.3.3"
 
 [dev-dependencies.pretty_assertions]
 version = "~1.0"

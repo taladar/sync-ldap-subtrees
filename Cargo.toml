@@ -73,7 +73,7 @@ version = "0.3.3"
 version = "~1.0"
 
 [package.metadata.deb]
-name = "sync_ldap_subtrees"
+name = "sync-ldap-subtrees"
 depends = "$auto"
 extended-description = "Syncs two LDAP subtrees on two different LDAP servers similar to rsync for files"
 section = "database"

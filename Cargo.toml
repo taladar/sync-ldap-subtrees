@@ -3,7 +3,7 @@ name = "sync-ldap-subtrees"
 description = "Syncs two LDAP subtrees on two different LDAP servers similar to rsync for files"
 readme = "README.md"
 license = "MIT/Apache-2.0"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Matthias Hörmann <mhoermann@gmail.com>"]
 edition = "2021"
 repository = "https://github.com/taladar/sync-ldap-subtrees"
@@ -20,13 +20,13 @@ debug = true
 [dependencies]
 
 [dependencies.ldap-types]
-version = "0.1.3"
+version = "0.2.0"
 
 [dependencies.ldap-utils]
-version = "0.1.1"
+version = "0.2.0"
 
 [dependencies.ldap3]
-version = "0.9"
+version = "0.10.5"
 features = [ "tls" ]
 
 [dependencies.lazy_static]

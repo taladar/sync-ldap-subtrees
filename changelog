@@ -1,3 +1,10 @@
+sync-ldap-subtrees (0.1.3-1) unstable; urgency=medium
+
+  * fix SPDX license expression
+  * update dependencies
+
+ -- Matthias Hörmann <mhoermann@gmail.com>  Fri, 21 Oct 2022 13:22:52 +0000
+
 sync-ldap-subtrees (0.1.2-1) unstable; urgency=medium
 
   * update ldap3 0.9 -> 0.10.5 (earlier 0.10 versions had a bug with SASL external auth)

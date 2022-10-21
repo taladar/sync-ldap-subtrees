@@ -1,3 +1,8 @@
+## 0.1.3
+
+Fix SPDX license expression
+Update dependencies
+
 ## 0.1.2
 
 update ldap3 0.9 -> 0.10.5 (earlier 0.10 versions had a bug with SASL external auth)

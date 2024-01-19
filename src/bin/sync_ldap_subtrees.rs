@@ -2,7 +2,8 @@
 #![deny(renamed_and_removed_lints)]
 #![forbid(unsafe_code)]
 #![deny(deprecated)]
-#![forbid(private_in_public)]
+#![forbid(private_interfaces)]
+#![forbid(private_bounds)]
 #![forbid(non_fmt_panics)]
 #![deny(unreachable_code)]
 #![deny(unreachable_patterns)]
@@ -55,7 +56,6 @@ use std::convert::TryFrom;
        about = clap::crate_description!(),
        author = clap::crate_authors!(),
        version = clap::crate_version!(),
-       setting = clap::AppSettings::DeriveDisplayOrder,
        )]
 struct Options {
     /// do not perform any changes, just show (in logs) what would be done
@@ -112,7 +112,7 @@ struct Options {
     destination_search_base: std::string::String,
 
     /// scope for the search
-    #[clap(long, parse(try_from_str = parse_scope), possible_values = [ "base", "one", "sub" ])]
+    #[clap(long, value_parser = parse_scope)]
     search_scope: ldap3::Scope,
 
     /// LDAP search filter for the search on the source LDAP server
@@ -125,7 +125,7 @@ struct Options {
     search_filter: std::string::String,
 
     /// if specified only transfer these attributes
-    #[clap(long = "attribute", multiple_occurrences = true, number_of_values = 1)]
+    #[clap(long = "attribute", number_of_values = 1)]
     attributes: Vec<std::string::String>,
 
     /// if specified ignore these object classes when transferring data (useful e.g. to avoid transferring passwords or similar local information)

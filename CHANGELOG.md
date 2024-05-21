@@ -1,3 +1,9 @@
+## 0.2.2
+
+update dependencies
+cargo-sort Cargo.toml dependencies
+update deny.toml to new format
+
 ## 0.2.1
 
 update dependencies

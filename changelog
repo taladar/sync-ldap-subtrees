@@ -1,3 +1,11 @@
+sync-ldap-subtrees (0.2.2-1) unstable; urgency=medium
+
+  * update dependencies
+  * cargo-sort Cargo.toml dependencies
+  * update deny.toml to new format
+
+ -- Matthias Hörmann <mhoermann@gmail.com>  Tue, 21 May 2024 09:11:52 +0000
+
 sync-ldap-subtrees (0.2.1-1) unstable; urgency=medium
 
   * update dependencies

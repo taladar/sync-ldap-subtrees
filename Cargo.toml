@@ -3,71 +3,67 @@ name = "sync-ldap-subtrees"
 description = "Syncs two LDAP subtrees on two different LDAP servers similar to rsync for files"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Matthias Hörmann <mhoermann@gmail.com>"]
 edition = "2021"
 repository = "https://github.com/taladar/sync-ldap-subtrees"
-keywords = [ "ldap", "sync" ]
-categories = [ "command-line-utilities" ]
-exclude = [ "push-deploy-branches.sh", ".env", "tarpaulin-report.html", "tarpaulin-report.json" ]
+keywords = ["ldap", "sync"]
+categories = ["command-line-utilities"]
+exclude = ["push-deploy-branches.sh", ".env", "tarpaulin-report.html", "tarpaulin-report.json"]
 
 [profile.release]
 # do not strip debug info from release builds, useful for debugging those, cargo-flamegraph profiling or similar use cases
 debug = true
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 
-[dependencies.ldap-types]
-version = "0.3.0"
-
-[dependencies.ldap-utils]
-version = "0.3.1"
-
-[dependencies.ldap3]
-version = "0.11.3"
-features = [ "tls" ]
-
-[dependencies.lazy_static]
-version = "1.4.0"
-
-[dependencies.simple-error]
-version = "~0.3"
-
-[dependencies.serde]
-version = "1.0.196"
-features = [ "derive" ]
-
 [dependencies.chumsky]
 version = "0.9.3"
-
-[dependencies.diff-struct]
-version = "0.5.3"
 
 [dependencies.clap]
 version = "~4.5"
 features = ["derive", "cargo"]
 
-[dependencies.tokio]
-version = "1.36.0"
-features = [ "full" ]
+[dependencies.diff-struct]
+version = "0.5.3"
 
 [dependencies.futures]
 version = "~0.3"
+
+[dependencies.lazy_static]
+version = "1.4.0"
+
+[dependencies.ldap-types]
+version = "0.4.0"
+
+[dependencies.ldap-utils]
+version = "0.4.0"
+
+[dependencies.ldap3]
+version = "0.11.3"
+features = ["tls"]
+
+[dependencies.oid]
+version = "0.2.1"
+
+[dependencies.serde]
+version = "1.0.202"
+features = ["derive"]
+
+[dependencies.simple-error]
+version = "~0.3"
+
+[dependencies.tokio]
+version = "1.37.0"
+features = ["full"]
 
 [dependencies.tracing]
 version = "~0.1"
 
 [dependencies.tracing-subscriber]
 version = "0.3.18"
-features = [ "env-filter", "tracing-log" ]
-
-[dependencies.oid]
-version = "0.2.1"
-
-[dev-dependencies.pretty_assertions]
-version = "1.4.0"
+features = ["env-filter", "tracing-log"]
 
 [package.metadata.deb]
 name = "sync-ldap-subtrees"
@@ -84,6 +80,9 @@ revision = "1"
 
 [package.metadata.rpm.cargo]
 buildflags = ["--release"]
+
+[dev-dependencies.pretty_assertions]
+version = "1.4.0"
 
 [package.metadata.rpm.targets]
 sync_ldap_subtrees = { path = "/usr/bin/sync_ldap_subtrees" }

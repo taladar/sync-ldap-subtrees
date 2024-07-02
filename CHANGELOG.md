@@ -1,3 +1,7 @@
+## 0.2.5
+
+fixes to GitHub action
+
 ## 0.2.4
 
 add GitHub Actions to create a release

@@ -1,3 +1,7 @@
+## 0.2.7
+
+update openssl-src dependency
+
 ## 0.2.6
 
 use vendored openssl dependency and fix github actions since building there fails otherwise

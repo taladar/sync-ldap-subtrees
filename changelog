@@ -1,3 +1,9 @@
+sync-ldap-subtrees (0.2.9-1) unstable; urgency=medium
+
+  * update dependencies
+
+ -- Matthias Hörmann <mhoermann@gmail.com>  Tue, 29 Oct 2024 10:00:52 +0000
+
 sync-ldap-subtrees (0.2.8-1) unstable; urgency=medium
 
   * update dependencies

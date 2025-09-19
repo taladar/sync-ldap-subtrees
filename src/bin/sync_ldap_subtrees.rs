@@ -166,6 +166,7 @@ async fn main() {
     }
 }
 
+/// main logic other than logging init and error printing
 #[instrument]
 async fn do_sync() -> Result<(), Box<dyn Error>> {
     let options = <Options as clap::Parser>::try_parse()?;

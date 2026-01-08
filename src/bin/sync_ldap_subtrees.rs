@@ -1,32 +1,6 @@
-#![deny(unknown_lints)]
-#![deny(renamed_and_removed_lints)]
-#![forbid(unsafe_code)]
-#![deny(deprecated)]
-#![forbid(private_interfaces)]
-#![forbid(private_bounds)]
-#![forbid(non_fmt_panics)]
-#![deny(unreachable_code)]
-#![deny(unreachable_patterns)]
-#![forbid(unused_doc_comments)]
-#![forbid(unused_must_use)]
-#![deny(while_true)]
-#![deny(unused_parens)]
-#![deny(redundant_semicolons)]
-#![deny(non_ascii_idents)]
-#![deny(confusable_idents)]
-#![warn(missing_docs)]
-#![warn(clippy::missing_docs_in_private_items)]
-#![warn(clippy::cargo_common_metadata)]
-#![warn(rustdoc::missing_crate_level_docs)]
-#![deny(rustdoc::broken_intra_doc_links)]
-#![warn(missing_debug_implementations)]
-#![deny(clippy::mod_module_files)]
 #![doc = include_str!("../../README.md")]
 
-use std::error::Error;
-
 use ldap_types::basic::LDAPEntry;
-use ldap_types::basic::OIDWithLength;
 use ldap_types::filter::search_filter_parser;
 use ldap_utils::apply_ldap_operations;
 use ldap_utils::diff_entries;
@@ -36,19 +10,13 @@ use ldap_utils::{
     toml_connect_parameters,
 };
 
-use lazy_static::lazy_static;
-
 use tracing::instrument;
 use tracing::Level;
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
 use std::collections::HashMap;
 
-use chumsky::Parser;
-
-use oid::ObjectIdentifier;
-
-use std::convert::TryFrom;
+use chumsky::Parser as _;
 
 /// Command-line options
 #[derive(clap::Parser, Debug)]
@@ -57,6 +25,10 @@ use std::convert::TryFrom;
        author = clap::crate_authors!(),
        version = clap::crate_version!(),
        )]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "This models the command line interface for clap, we can not just refactor this into a different structure"
+)]
 struct Options {
     /// do not perform any changes, just show (in logs) what would be done
     #[clap(
@@ -151,6 +123,34 @@ struct Options {
     include_children: bool,
 }
 
+use thiserror::Error;
+
+/// All errors that can occur during the sync
+#[derive(Debug, Error)]
+enum SyncLdapSubtreesError {
+    #[error(transparent)]
+    /// Error originating from the `clap` crate for command-line argument parsing.
+    Clap(#[from] clap::Error),
+    #[error(transparent)]
+    /// Error originating from parsing the TOML configuration file.
+    TomlConfig(#[from] ldap_utils::TomlConfigError),
+    #[error(transparent)]
+    /// Error originating from connecting to the LDAP server.
+    Connect(#[from] ldap_utils::ConnectError),
+    #[error(transparent)]
+    /// Error originating from querying the LDAP schema.
+    LdapSchema(#[from] ldap_utils::LdapSchemaError),
+    #[error(transparent)]
+    /// Error originating from performing LDAP operations.
+    LdapOperations(#[from] ldap_utils::LdapOperationError),
+    #[error("failed to parse search filter: {0}")]
+    /// Error indicating a failure to parse the provided search filter.
+    SearchFilterParsing(String),
+    #[error("missing LDAP schema")]
+    /// Error indicating that the LDAP schema could not be retrieved.
+    MissingLdapSchema,
+}
+
 #[tokio::main]
 async fn main() {
     FmtSubscriber::builder()
@@ -158,7 +158,7 @@ async fn main() {
         .with_env_filter(EnvFilter::from_default_env())
         .init();
     match do_sync().await {
-        Ok(_) => (),
+        Ok(()) => (),
         Err(e) => {
             tracing::error!("{}", e);
             std::process::exit(1);
@@ -168,16 +168,9 @@ async fn main() {
 
 /// main logic other than logging init and error printing
 #[instrument]
-async fn do_sync() -> Result<(), Box<dyn Error>> {
+async fn do_sync() -> Result<(), SyncLdapSubtreesError> {
     let options = <Options as clap::Parser>::try_parse()?;
     tracing::debug!("{:#?}", options);
-
-    lazy_static! {
-        static ref DN_SYNTAX_OID: OIDWithLength = OIDWithLength {
-            oid: ObjectIdentifier::try_from("1.3.6.1.4.1.1466.115.121.1.12").unwrap(),
-            length: None
-        };
-    }
 
     let source_connect_parameters = toml_connect_parameters(options.source_ldap_server.to_owned())?;
     tracing::debug!(
@@ -191,7 +184,7 @@ async fn do_sync() -> Result<(), Box<dyn Error>> {
     tracing::debug!("Source root DSE {:#?}", source_root_dse);
     let source_ldap_schema = query_ldap_schema(&mut source_ldap)
         .await?
-        .expect("No source schema");
+        .ok_or(SyncLdapSubtreesError::MissingLdapSchema)?;
     tracing::debug!("Source LDAP schema {:#?}", source_ldap_schema);
 
     let destination_connect_parameters =
@@ -207,12 +200,13 @@ async fn do_sync() -> Result<(), Box<dyn Error>> {
     tracing::debug!("Destination root DSE {:#?}", destination_root_dse);
     let destination_ldap_schema = query_ldap_schema(&mut destination_ldap)
         .await?
-        .expect("No destination schema");
+        .ok_or(SyncLdapSubtreesError::MissingLdapSchema)?;
     tracing::debug!("Destination LDAP schema {:#?}", destination_ldap_schema);
 
     let source_search_filter = search_filter_parser()
-        .parse(options.search_filter.clone())
-        .expect("Failed to parse search filter");
+        .parse(&options.search_filter)
+        .into_result()
+        .map_err(|e| SyncLdapSubtreesError::SearchFilterParsing(format!("{e:#?}")))?;
     tracing::debug!("Source search filter: {:#?}", source_search_filter);
     let destination_search_filter = source_search_filter.transform_base_dns(
         &source_base_dn,
@@ -313,7 +307,7 @@ async fn do_sync() -> Result<(), Box<dyn Error>> {
         options.add,
         options.update,
         options.delete,
-    );
+    )?;
 
     tracing::debug!("Operations to apply: {:#?}", ldap_operations);
     // TODO: abort sync if schemas differ between source and destination (optionally?)

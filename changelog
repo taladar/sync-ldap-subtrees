@@ -1,3 +1,11 @@
+sync-ldap-subtrees (0.3.0-1) unstable; urgency=medium
+
+  * Features - release - Add release.sh, cliff and rumdl config
+  * Other - deploy - Add trixie deploy branch
+  * Miscellaneous tasks - dependencies - Upgrade dependencies
+
+ -- Matthias Hörmann <mhoermann@gmail.com>  Thu, 08 Jan 2026 16:06:34 +0100
+
 sync-ldap-subtrees (0.2.14-1) unstable; urgency=medium
 
   * update dependencies

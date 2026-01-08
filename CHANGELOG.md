@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.3.0 - 2026-01-08 15:06:34Z
+
+### 🚀 Features
+
+- *(release)* Add release.sh, cliff and rumdl config
+
+### 💼 Other
+
+- *(deploy)* Add trixie deploy branch
+
+### ⚙️ Miscellaneous Tasks
+
+- *(dependencies)* Upgrade dependencies
+
 ## 0.2.14
 
 update dependencies

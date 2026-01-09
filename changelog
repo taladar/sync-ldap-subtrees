@@ -1,3 +1,9 @@
+sync-ldap-subtrees (0.3.1-1) unstable; urgency=medium
+
+  * Miscellaneous tasks - dependencies - Upgrade dependencies
+
+ -- Matthias Hörmann <mhoermann@gmail.com>  Fri, 09 Jan 2026 12:03:40 +0100
+
 sync-ldap-subtrees (0.3.0-1) unstable; urgency=medium
 
   * Features - release - Add release.sh, cliff and rumdl config

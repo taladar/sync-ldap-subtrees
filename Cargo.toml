@@ -10,10 +10,10 @@ repository = "https://github.com/taladar/sync-ldap-subtrees"
 keywords = ["ldap", "sync"]
 categories = ["command-line-utilities"]
 exclude = [
-    "push-deploy-branches.sh",
-    ".env",
-    "tarpaulin-report.html",
-    "tarpaulin-report.json",
+  "push-deploy-branches.sh",
+  ".env",
+  "tarpaulin-report.html",
+  "tarpaulin-report.json",
 ]
 
 [package.metadata.deb]
@@ -22,7 +22,7 @@ depends = "$auto"
 extended-description = "Syncs two LDAP subtrees on two different LDAP servers similar to rsync for files"
 section = "database"
 copyright = "2022, Matthias Hörmann <mhoermann@gmail.com>"
-assets = [[ "target/release/sync_ldap_subtrees", "usr/bin/", "755" ]]
+assets = [["target/release/sync_ldap_subtrees", "usr/bin/", "755"]]
 maintainer-scripts = "maintainer-scripts"
 changelog = "changelog"
 revision = "1"

@@ -27,7 +27,7 @@ git cliff --config cliff-debian.toml --prepend changelog -u -t "sync_ldap_subtre
 tail -n +2 changelog | sponge changelog
 rm context.json full_context.json
 
-rumdl fmt --fix CHANGELOG.md
+rumdl fmt CHANGELOG.md
 
 cargo build
 

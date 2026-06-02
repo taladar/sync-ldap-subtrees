@@ -157,10 +157,16 @@ async fn main() {
         .with_max_level(Level::WARN)
         .with_env_filter(EnvFilter::from_default_env())
         .init();
+    log_panics::init();
+    #[expect(
+        clippy::print_stderr,
+        reason = "This is the final print in our error chain and we already log this with tracing above but depending on log level the tracing output is not seen by the user"
+    )]
     match do_sync().await {
         Ok(()) => (),
         Err(e) => {
-            tracing::error!("{}", e);
+            tracing::error!("{e}");
+            eprintln!("{e}");
             std::process::exit(1);
         }
     }

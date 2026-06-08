@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.5 - 2026-06-08 15:18:11Z
+
+### 🐛 Bug Fixes
+
+- *(github)* Fix zizmar issues in github workflow and formatting issues
+
+### ⚙️ Miscellaneous Tasks
+
+- *(template)* Reconcile with rust bin template improvements
+- *(dependencies)* Update dependencies
+
 ## 0.3.4 - 2026-04-08 10:40:34Z
 
 ### ⚙️ Miscellaneous Tasks

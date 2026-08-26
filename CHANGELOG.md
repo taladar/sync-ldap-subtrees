@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.7 - 2026-08-26 10:31:35Z
+
+### 🐛 Bug Fixes
+
+- *(openssl)* Re-add vendored openssl for GitHub build
+
 ## 0.3.6 - 2026-08-26 10:18:44Z
 
 ### ⚙️ Miscellaneous Tasks

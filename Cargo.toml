@@ -17,7 +17,7 @@ exclude = [
 ]
 
 [package.metadata.cargo-machete]
-ignored = ["diff-struct"]
+ignored = ["diff-struct", "openssl"]
 
 [package.metadata.deb]
 name = "sync-ldap-subtrees"
@@ -38,6 +38,7 @@ sync_ldap_subtrees = { path = "/usr/bin/sync_ldap_subtrees" }
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+openssl = { version = "0.10.81", features = ["vendored"] }
 thiserror = "2.0.20"
 
 [dependencies.chumsky]

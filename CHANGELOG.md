@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0 - 2026-10-29 15:39:09Z
+
+### 🚀 Features
+
+- Add --continue-on-error to apply the remaining operations after a failure
+
+### ⚙️ Miscellaneous Tasks
+
+- Publish GitHub releases only after all assets are uploaded
+- *(dependencies)* Update dependencies
+- *(dependencies)* Update dependencies
+
 ## 0.3.7 - 2026-08-26 10:31:35Z
 
 ### 🐛 Bug Fixes

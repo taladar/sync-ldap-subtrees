@@ -1,6 +1,6 @@
 #![doc = include_str!("../../README.md")]
 
-use ldap_types::basic::LDAPEntry;
+use ldap_types::basic::{LDAPEntry, LDAPOperation};
 use ldap_types::filter::search_filter_parser;
 use ldap_utils::apply_ldap_operations;
 use ldap_utils::diff_entries;
@@ -54,6 +54,14 @@ struct Options {
         help = "Delete entries at the destination not present at the source"
     )]
     delete: bool,
+
+    /// keep applying the remaining operations when one fails, log each failure
+    /// and exit with an error at the end if any failed
+    #[clap(
+        long,
+        help = "Keep applying the remaining operations when one fails (e.g. a constraint violation on a single entry), log each failure and exit with an error at the end if any failed"
+    )]
+    continue_on_error: bool,
 
     /// Name of TOML file describing the CA certificate, client certificate, client key and LDAP URI for the source LDAP server
     #[clap(
@@ -149,6 +157,23 @@ enum SyncLdapSubtreesError {
     #[error("missing LDAP schema")]
     /// Error indicating that the LDAP schema could not be retrieved.
     MissingLdapSchema,
+    #[error("{failed} of {total} LDAP operations failed")]
+    /// Error indicating that some operations failed with --continue-on-error
+    OperationsFailed {
+        /// number of operations that failed
+        failed: usize,
+        /// number of operations that were attempted
+        total: usize,
+    },
+}
+
+/// short description of an LDAP operation for log messages
+fn describe_operation(operation: &LDAPOperation, base_dn: &str) -> String {
+    match operation {
+        LDAPOperation::Add(LDAPEntry { dn, .. }) => format!("add {dn},{base_dn}"),
+        LDAPOperation::Delete { dn } => format!("delete {dn},{base_dn}"),
+        LDAPOperation::Modify { dn, .. } => format!("modify {dn},{base_dn}"),
+    }
 }
 
 #[tokio::main]
@@ -330,13 +355,40 @@ async fn do_sync() -> Result<(), SyncLdapSubtreesError> {
     //.await?;
 
     if !options.dry_run {
-        apply_ldap_operations(
-            &mut destination_ldap,
-            &destination_base_dn,
-            &ldap_operations,
-            vec![],
-        )
-        .await?;
+        if options.continue_on_error {
+            // one operation at a time, so a failing one does not stop the rest
+            let mut failed = 0_usize;
+            for operation in &ldap_operations {
+                if let Err(e) = apply_ldap_operations(
+                    &mut destination_ldap,
+                    &destination_base_dn,
+                    std::slice::from_ref(operation),
+                    vec![],
+                )
+                .await
+                {
+                    failed = failed.saturating_add(1);
+                    tracing::error!(
+                        "Failed to {}: {e}",
+                        describe_operation(operation, &destination_base_dn)
+                    );
+                }
+            }
+            if failed > 0 {
+                return Err(SyncLdapSubtreesError::OperationsFailed {
+                    failed,
+                    total: ldap_operations.len(),
+                });
+            }
+        } else {
+            apply_ldap_operations(
+                &mut destination_ldap,
+                &destination_base_dn,
+                &ldap_operations,
+                vec![],
+            )
+            .await?;
+        }
     }
 
     Ok(())

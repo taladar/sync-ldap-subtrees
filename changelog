@@ -1,3 +1,9 @@
+sync-ldap-subtrees (0.4.1-1) unstable; urgency=medium
+
+  * Miscellaneous tasks - dependencies - Update dependencies
+
+ -- Matthias Hörmann <mhoermann@gmail.com>  Mon, 16 Nov 2026 17:40:54 +0100
+
 sync-ldap-subtrees (0.4.0-1) unstable; urgency=medium
 
   * Features Add --continue-on-error to apply the remaining operations after a failure

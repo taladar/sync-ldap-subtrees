@@ -808,9 +808,9 @@ dependencies = [
 
 [[package]]
 name = "ldap-utils"
-version = "0.7.0"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "18d4d0e14866d2d2ee2d13b7260ad742f55f569039a946643ef6f16fc26e1ac9"
+checksum = "c2b360a522c34ccc95bf5f181adbf8420f58fb026f913414696826f9d2d48ce8"
 dependencies = [
  "chumsky",
  "derive_builder",

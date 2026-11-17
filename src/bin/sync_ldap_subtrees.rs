@@ -139,25 +139,67 @@ enum SyncLdapSubtreesError {
     #[error(transparent)]
     /// Error originating from the `clap` crate for command-line argument parsing.
     Clap(#[from] clap::Error),
-    #[error(transparent)]
+    #[error("error reading the {server} LDAP server config {path}: {source}")]
     /// Error originating from parsing the TOML configuration file.
-    TomlConfig(#[from] ldap_utils::TomlConfigError),
-    #[error(transparent)]
+    TomlConfig {
+        /// which server the config is for (source or destination)
+        server: &'static str,
+        /// the path of the config file
+        path: std::path::PathBuf,
+        /// the error
+        #[source]
+        source: Box<ldap_utils::TomlConfigError>,
+    },
+    #[error("error connecting to the {server} LDAP server {url} (config {path}): {source}")]
     /// Error originating from connecting to the LDAP server.
-    Connect(#[from] ldap_utils::ConnectError),
-    #[error(transparent)]
+    Connect {
+        /// which server (source or destination)
+        server: &'static str,
+        /// the LDAP URL from the config
+        url: String,
+        /// the path of the config file
+        path: std::path::PathBuf,
+        /// the error
+        #[source]
+        source: Box<ldap_utils::ConnectError>,
+    },
+    #[error("error querying the LDAP schema of the {server} LDAP server: {source}")]
     /// Error originating from querying the LDAP schema.
-    LdapSchema(#[from] ldap_utils::LdapSchemaError),
+    LdapSchema {
+        /// which server (source or destination)
+        server: &'static str,
+        /// the error
+        #[source]
+        source: Box<ldap_utils::LdapSchemaError>,
+    },
+    #[error("error on the {server} LDAP server: {source}")]
+    /// Error originating from performing LDAP operations on one of the servers.
+    LdapOperationsOn {
+        /// which server (source or destination)
+        server: &'static str,
+        /// the error
+        #[source]
+        source: Box<ldap_utils::LdapOperationError>,
+    },
     #[error(transparent)]
-    /// Error originating from performing LDAP operations.
+    /// Error originating from LDAP operations not specific to one server
+    /// (e.g. diffing the entries).
     LdapOperations(#[from] ldap_utils::LdapOperationError),
-    #[error("failed to parse search filter: {0}")]
+    #[error("failed to parse search filter '{filter}': {errors}")]
     /// Error indicating a failure to parse the provided search filter.
-    SearchFilterParsing(String),
-    #[error("missing LDAP schema")]
+    SearchFilterParsing {
+        /// the search filter as given on the command line
+        filter: String,
+        /// the parse errors
+        errors: String,
+    },
+    #[error("the {server} LDAP server did not return an LDAP schema")]
     /// Error indicating that the LDAP schema could not be retrieved.
-    MissingLdapSchema,
-    #[error("{failed} of {total} LDAP operations failed")]
+    MissingLdapSchema {
+        /// which server (source or destination)
+        server: &'static str,
+    },
+    #[error("{failed} of {total} LDAP operations failed, see the log for the individual failures")]
     /// Error indicating that some operations failed with --continue-on-error
     OperationsFailed {
         /// number of operations that failed
@@ -197,47 +239,77 @@ async fn main() {
     }
 }
 
+/// name of the source server in messages
+const SOURCE: &str = "source";
+/// name of the destination server in messages
+const DESTINATION: &str = "destination";
+
+/// construct a function wrapping an LDAP operation error with the server it
+/// occurred on
+fn on_server(
+    server: &'static str,
+) -> impl FnOnce(ldap_utils::LdapOperationError) -> SyncLdapSubtreesError {
+    move |source| SyncLdapSubtreesError::LdapOperationsOn {
+        server,
+        source: Box::new(source),
+    }
+}
+
+/// connect to one of the LDAP servers and query its root DSE and schema
+async fn connect_and_query_schema(
+    server: &'static str,
+    config_path: &std::path::Path,
+) -> Result<(ldap3::Ldap, String, ldap_types::schema::LDAPSchema), SyncLdapSubtreesError> {
+    let connect_parameters = toml_connect_parameters(config_path.to_owned()).map_err(|source| {
+        SyncLdapSubtreesError::TomlConfig {
+            server,
+            path: config_path.to_owned(),
+            source: Box::new(source),
+        }
+    })?;
+    tracing::debug!("{server} connect parameters\n{:#?}", connect_parameters);
+    let url = connect_parameters.url.clone();
+    let (mut ldap, base_dn) =
+        connect_with_parameters(connect_parameters)
+            .await
+            .map_err(|source| SyncLdapSubtreesError::Connect {
+                server,
+                url,
+                path: config_path.to_owned(),
+                source: Box::new(source),
+            })?;
+    tracing::debug!("{server} base DN {:#?}", base_dn);
+    let root_dse = query_root_dse(&mut ldap).await.map_err(on_server(server))?;
+    tracing::debug!("{server} root DSE {:#?}", root_dse);
+    let ldap_schema = query_ldap_schema(&mut ldap)
+        .await
+        .map_err(|source| SyncLdapSubtreesError::LdapSchema {
+            server,
+            source: Box::new(source),
+        })?
+        .ok_or(SyncLdapSubtreesError::MissingLdapSchema { server })?;
+    tracing::debug!("{server} LDAP schema {:#?}", ldap_schema);
+    Ok((ldap, base_dn, ldap_schema))
+}
+
 /// main logic other than logging init and error printing
 #[instrument]
 async fn do_sync() -> Result<(), SyncLdapSubtreesError> {
     let options = <Options as clap::Parser>::try_parse()?;
     tracing::debug!("{:#?}", options);
 
-    let source_connect_parameters = toml_connect_parameters(options.source_ldap_server.to_owned())?;
-    tracing::debug!(
-        "Source connect parameters\n{:#?}",
-        source_connect_parameters
-    );
-    let (mut source_ldap, source_base_dn) =
-        connect_with_parameters(source_connect_parameters).await?;
-    tracing::debug!("Source base DN {:#?}", source_base_dn);
-    let source_root_dse = query_root_dse(&mut source_ldap).await?;
-    tracing::debug!("Source root DSE {:#?}", source_root_dse);
-    let source_ldap_schema = query_ldap_schema(&mut source_ldap)
-        .await?
-        .ok_or(SyncLdapSubtreesError::MissingLdapSchema)?;
-    tracing::debug!("Source LDAP schema {:#?}", source_ldap_schema);
-
-    let destination_connect_parameters =
-        toml_connect_parameters(options.destination_ldap_server.to_owned())?;
-    tracing::debug!(
-        "Destination connect parameters\n{:#?}",
-        destination_connect_parameters
-    );
-    let (mut destination_ldap, destination_base_dn) =
-        connect_with_parameters(destination_connect_parameters).await?;
-    tracing::debug!("Destination base DN {:#?}", destination_base_dn);
-    let destination_root_dse = query_root_dse(&mut destination_ldap).await?;
-    tracing::debug!("Destination root DSE {:#?}", destination_root_dse);
-    let destination_ldap_schema = query_ldap_schema(&mut destination_ldap)
-        .await?
-        .ok_or(SyncLdapSubtreesError::MissingLdapSchema)?;
-    tracing::debug!("Destination LDAP schema {:#?}", destination_ldap_schema);
+    let (mut source_ldap, source_base_dn, source_ldap_schema) =
+        connect_and_query_schema(SOURCE, &options.source_ldap_server).await?;
+    let (mut destination_ldap, destination_base_dn, _destination_ldap_schema) =
+        connect_and_query_schema(DESTINATION, &options.destination_ldap_server).await?;
 
     let source_search_filter = search_filter_parser()
         .parse(&options.search_filter)
         .into_result()
-        .map_err(|e| SyncLdapSubtreesError::SearchFilterParsing(format!("{e:#?}")))?;
+        .map_err(|e| SyncLdapSubtreesError::SearchFilterParsing {
+            filter: options.search_filter.clone(),
+            errors: format!("{e:#?}"),
+        })?;
     tracing::debug!("Source search filter: {:#?}", source_search_filter);
     let destination_search_filter = source_search_filter.transform_base_dns(
         &source_base_dn,
@@ -274,7 +346,8 @@ async fn do_sync() -> Result<(), SyncLdapSubtreesError> {
         options.attributes.as_slice(),
         &mut source_entries,
     )
-    .await?;
+    .await
+    .map_err(on_server(SOURCE))?;
 
     if options.include_children {
         let source_base_query_dns = source_entries.keys().cloned().collect::<Vec<String>>();
@@ -289,7 +362,8 @@ async fn do_sync() -> Result<(), SyncLdapSubtreesError> {
                 options.attributes.as_slice(),
                 &mut source_entries,
             )
-            .await?;
+            .await
+            .map_err(on_server(SOURCE))?;
         }
     }
 
@@ -304,7 +378,8 @@ async fn do_sync() -> Result<(), SyncLdapSubtreesError> {
         options.attributes.as_slice(),
         &mut destination_entries,
     )
-    .await?;
+    .await
+    .map_err(on_server(DESTINATION))?;
 
     if options.include_children {
         let destination_base_query_dns =
@@ -320,7 +395,8 @@ async fn do_sync() -> Result<(), SyncLdapSubtreesError> {
                 options.attributes.as_slice(),
                 &mut destination_entries,
             )
-            .await?;
+            .await
+            .map_err(on_server(DESTINATION))?;
         }
     }
 
@@ -387,7 +463,8 @@ async fn do_sync() -> Result<(), SyncLdapSubtreesError> {
                 &ldap_operations,
                 vec![],
             )
-            .await?;
+            .await
+            .map_err(on_server(DESTINATION))?;
         }
     }
 

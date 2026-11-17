@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.2 - 2026-11-17 16:05:34Z
+
+### 🐛 Bug Fixes
+
+- Give more useful error messages
+
 ## 0.4.1 - 2026-11-16 16:40:54Z
 
 ### ⚙️ Miscellaneous Tasks

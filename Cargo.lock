@@ -790,9 +790,9 @@ dependencies = [
 
 [[package]]
 name = "ldap-types"
-version = "0.8.1"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a4727455d5a01083ab7264506b9de044a708539401543ce2b497b24a800ff25"
+checksum = "cd65af59d7efe115d34a0d4d4647bdfa3f86b39914c19cbd9013283a4672a816"
 dependencies = [
  "ariadne",
  "chumsky",
@@ -808,9 +808,9 @@ dependencies = [
 
 [[package]]
 name = "ldap-utils"
-version = "0.8.1"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2356529590b31c417b99fc74f8c84bdbbc067d5f6981bde59cab4b85056b175d"
+checksum = "c3e0069e1e8238d093c3d8537800390a3defc0dabb87196f697c3ec46c171df6"
 dependencies = [
  "chumsky",
  "derive_builder",

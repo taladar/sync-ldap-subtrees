@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.4 - 2026-11-24 09:24:28Z
+
+### 🐛 Bug Fixes
+
+- No spurious delete failures below a deleted entry
+
 ## 0.4.3 - 2026-11-23 12:33:44Z
 
 ### ⚙️ Miscellaneous Tasks

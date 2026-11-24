@@ -1,3 +1,9 @@
+sync-ldap-subtrees (0.4.4-1) unstable; urgency=medium
+
+  * Bug fixes No spurious delete failures below a deleted entry
+
+ -- Matthias Hörmann <mhoermann@gmail.com>  Tue, 24 Nov 2026 10:24:28 +0100
+
 sync-ldap-subtrees (0.4.3-1) unstable; urgency=medium
 
   * Miscellaneous tasks - dependencies - Update dependencies

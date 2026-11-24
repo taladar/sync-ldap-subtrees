@@ -1492,7 +1492,7 @@ dependencies = [
 
 [[package]]
 name = "sync-ldap-subtrees"
-version = "0.4.3"
+version = "0.4.4"
 dependencies = [
  "chumsky",
  "clap",
